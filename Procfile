@@ -1,1 +1,1 @@
-web: pipenv run gunicorn -w 4 -b 0.0.0.0:$PORT simple_server:app
+web: /workspace/.local/share/virtualenvs/workspace-dqq3IVyd/bin/gunicorn -w 4 -b 0.0.0.0:$PORT simple_server:app

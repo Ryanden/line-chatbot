@@ -13,5 +13,7 @@ COPY . .
 # pipenv 환경 설정 & 패키지 설치
 RUN pipenv install --deploy --ignore-pipfile
 
+RUN pipenv run pip install gunicorn  # gunicorn 설치 추가
+
 # Gunicorn을 이용해 Flask 앱 실행
 CMD ["pipenv", "run", "gunicorn", "-w", "4", "-b", "0.0.0.0:${PORT}", "simple_server:app"]
