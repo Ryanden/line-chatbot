@@ -1,33 +1,65 @@
-from flask import Flask, request, jsonify
+
+from flask import Flask, request, jsonify, render_template
 import os
-port = int(os.environ.get("PORT", 5000))  # 기본값 5000
+import requests
+import logging
+from dotenv import load_dotenv
+
+# .env 파일 로드
+load_dotenv()
+
+# 환경 변수 가져오기
+ACCESS_TOKEN = os.getenv('LINE_CHANNEL_ACCESS_TOKEN')
+USER_ID = os.getenv('USER_ID')
+
+# 로그 설정
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 app = Flask(__name__)
 
+# 메시지 전송 함수
+def send_line_message():
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {ACCESS_TOKEN}'
+    }
+
+    message = '📢 버튼을 눌러 전송된 메시지입니다!'
+
+    data = {
+        "to": USER_ID,
+        "messages": [
+            {
+                "type": "text",
+                "text": message
+            }
+        ]
+    }
+
+    url = 'https://api.line.me/v2/bot/message/push'
+    response = requests.post(url, headers=headers, json=data)
+
+    if response.status_code == 200:
+        logging.info("✅ 메시지가 성공적으로 전송되었습니다!")
+        return True
+    else:
+        logging.error(f"❌ 메시지 전송 실패. 상태 코드: {response.status_code}")
+        logging.error(f"응답 내용: {response.text}")
+        return False
+
+# 홈 페이지: 버튼이 있는 HTML 페이지 렌더링
 @app.route('/')
 def home():
-    return "Hello, Flask!"
+    return render_template('index.html')
 
-# Webhook을 처리할 엔드포인트
-@app.route('/webhook', methods=['POST'])  # POST 요청만 처리
-def webhook():
-    data = request.json  # 요청의 JSON 데이터 추출
-    print(f"Received data: {data}")
-    return "OK", 200  # HTTP 200 응답
-
-@app.route('/callback', methods=['POST'])
-def callback():
-    body = request.get_json()
-    
-    # 메시지가 왔을 때 userId 확인
-    if 'events' in body:
-        for event in body['events']:
-            if event['type'] == 'message':  # 사용자가 메시지를 보냈을 때
-                user_id = event['source']['userId']
-                print(f"📌 새로운 사용자 ID: {user_id}")
-    
-    return jsonify({"status": "ok"}), 200
-
+# 버튼을 누르면 메시지 전송
+@app.route('/send_message', methods=['POST'])
+def send_message():
+    success = send_line_message()
+    if success:
+        return jsonify({"status": "success", "message": "메시지가 전송되었습니다."})
+    else:
+        return jsonify({"status": "error", "message": "메시지 전송 실패."}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
