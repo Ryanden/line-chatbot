@@ -12,4 +12,4 @@ RUN pip install --no-cache-dir -U pip \
     && pip install --no-cache-dir -r requirements.txt
 
 # 5. 컨테이너 실행 시 gunicorn으로 Flask 서버 실행
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:${PORT}", "app:app"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "simple_server:app"]
