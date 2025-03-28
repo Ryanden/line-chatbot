@@ -1,9 +1,9 @@
 
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template # type: ignore
 import os
 import requests
 import logging
-from dotenv import load_dotenv
+from dotenv import load_dotenv # type: ignore
 
 # .env 파일 로드
 load_dotenv()
@@ -47,19 +47,31 @@ def send_line_message():
         logging.error(f"응답 내용: {response.text}")
         return False
 
-# 홈 페이지: 버튼이 있는 HTML 페이지 렌더링
-@app.route('/')
+@app.route("/")
 def home():
     return render_template('index.html')
 
-# 버튼을 누르면 메시지 전송
-@app.route('/send_message', methods=['POST'])
+@app.route("/send-message", methods=["POST"])
 def send_message():
-    success = send_line_message()
-    if success:
-        return jsonify({"status": "success", "message": "메시지가 전송되었습니다."})
+    data = request.json
+    message = data.get("text", "")
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {ACCESS_TOKEN}"
+    }
+
+    payload = {
+        "to": USER_ID,
+        "messages": [{"type": "text", "text": message}]
+    }
+
+    response = requests.post("https://api.line.me/v2/bot/message/push", headers=headers, json=payload)
+
+    if response.status_code == 200:
+        return jsonify({"status": "✅ 메시지 전송 성공!"})
     else:
-        return jsonify({"status": "error", "message": "메시지 전송 실패."}), 500
+        return jsonify({"status": f"❌ 메시지 전송 실패: {response.text}"}), 400
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

@@ -6,19 +6,21 @@
     <title>LINE 메시지 전송</title>
     <script>
         function sendMessage() {
-            fetch('/send_message', { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                alert(data.message);
+            let message = document.getElementById("message").value;
+            fetch("/send-message", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: message })
             })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+            .then(response => response.json())
+            .then(data => alert(data.status))
+            .catch(error => alert("메시지 전송 실패!"));
         }
     </script>
 </head>
 <body>
     <h1>LINE 메시지 전송</h1>
+    <textarea id="message" rows="5" cols="50" placeholder="보낼 메시지를 입력하세요..."></textarea><br>
     <button onclick="sendMessage()">메시지 보내기</button>
 </body>
 </html>
